@@ -1,4 +1,4 @@
-// --- Data storage ---
+// --- Data ---
 let bucketItems = [];
 let currentFilter = 'all';
 
@@ -16,24 +16,16 @@ function loadData() {
   render();
 }
 
-// Save to localStorage
 function saveData() {
   localStorage.setItem('bucketList', JSON.stringify(bucketItems));
   render();
 }
 
-// Escape HTML
 function escapeHtml(str) {
   if (!str) return '';
-  return str.replace(/[&<>]/g, function(m) {
-    if (m === '&') return '&amp;';
-    if (m === '<') return '&lt;';
-    if (m === '>') return '&gt;';
-    return m;
-  });
+  return str.replace(/[&<>]/g, m => m === '&' ? '&amp;' : m === '<' ? '&lt;' : '&gt;');
 }
 
-// Get image path
 function getImagePath(path) {
   if (!path) return '';
   if (!path.startsWith('images/') && !path.startsWith('http') && !path.startsWith('data:')) {
@@ -42,7 +34,6 @@ function getImagePath(path) {
   return path;
 }
 
-// Render all items
 function render() {
   const container = document.getElementById('bucketContainer');
   if (!container) return;
@@ -55,29 +46,27 @@ function render() {
   
   if (filtered.length === 0) {
     const empty = document.createElement('div');
-    empty.style.padding = '20px';
+    empty.style.padding = '30px';
     empty.style.textAlign = 'center';
     empty.style.color = '#999';
-    empty.innerHTML = currentFilter === 'completed' ? '✅ No completed items yet!' : '📝 Add your first bucket list item!';
+    empty.innerHTML = currentFilter === 'completed' ? '✅ No completed items yet!' : '📝 No pending items — add something!';
     container.appendChild(empty);
   }
   
   filtered.forEach(item => {
     const div = document.createElement('div');
     div.className = `bucket-item ${item.completed ? 'completed' : ''}`;
-    const completedClass = item.completed ? 'completed-text' : '';
-    const imagePath = getImagePath(item.image);
     
     div.innerHTML = `
       <div class="item-header">
         <input type="checkbox" class="checkmark" data-id="${item.id}" ${item.completed ? 'checked' : ''}>
-        <span class="item-title ${completedClass}" data-id="${item.id}">${escapeHtml(item.title)}</span>
+        <span class="item-title ${item.completed ? 'completed-text' : ''}" data-id="${item.id}">${escapeHtml(item.title)}</span>
         <button class="delete-btn" data-id="${item.id}">✗</button>
       </div>
       <div class="item-details">
         ${item.completedDate ? `<div class="completed-date">✅ Completed: ${escapeHtml(item.completedDate)}</div>` : ''}
         ${item.notes ? `<div class="item-notes">📝 ${escapeHtml(item.notes)}</div>` : ''}
-        ${item.image ? `<img src="${escapeHtml(imagePath)}" class="item-image" data-fullsrc="${escapeHtml(imagePath)}">` : ''}
+        ${item.image ? `<img src="${getImagePath(item.image)}" class="item-image" data-fullsrc="${getImagePath(item.image)}">` : ''}
         <div>
           <button class="edit-btn" data-id="${item.id}" data-type="notes">✏️ Edit Notes</button>
           <button class="edit-btn" data-id="${item.id}" data-type="image">🖼️ Add Image</button>
@@ -92,29 +81,28 @@ function render() {
   const total = bucketItems.length;
   const completedCount = bucketItems.filter(i => i.completed).length;
   const percent = total === 0 ? 0 : Math.round((completedCount / total) * 100);
-  document.getElementById('itemCount').innerText = `${filtered.length} items showing (${completedCount} completed)`;
+  document.getElementById('itemCount').innerText = `${filtered.length} item${filtered.length !== 1 ? 's' : ''} (${completedCount} completed)`;
   document.getElementById('progressPercent').innerText = percent + '%';
   document.getElementById('progressFill').style.width = percent + '%';
   
   // Attach events
   document.querySelectorAll('.checkmark').forEach(cb => {
-    cb.addEventListener('change', (e) => toggleComplete(parseInt(e.target.dataset.id)));
+    cb.addEventListener('change', e => toggleComplete(parseInt(e.target.dataset.id)));
   });
   document.querySelectorAll('.delete-btn').forEach(btn => {
-    btn.addEventListener('click', (e) => deleteItem(parseInt(e.target.dataset.id)));
+    btn.addEventListener('click', e => deleteItem(parseInt(e.target.dataset.id)));
   });
   document.querySelectorAll('.item-title').forEach(title => {
-    title.addEventListener('click', (e) => editTitle(parseInt(title.dataset.id), title));
+    title.addEventListener('click', e => editTitle(parseInt(title.dataset.id), title));
   });
   document.querySelectorAll('.edit-btn').forEach(btn => {
-    btn.addEventListener('click', (e) => openEditPopup(parseInt(btn.dataset.id), btn.dataset.type));
+    btn.addEventListener('click', e => openEditPopup(parseInt(btn.dataset.id), btn.dataset.type));
   });
   document.querySelectorAll('.item-image').forEach(img => {
     img.addEventListener('click', () => openLightbox(img.src));
   });
 }
 
-// Toggle complete status
 function toggleComplete(id) {
   const item = bucketItems.find(i => i.id === id);
   if (item) {
@@ -128,7 +116,6 @@ function toggleComplete(id) {
   }
 }
 
-// Delete item
 function deleteItem(id) {
   if (confirm('Delete this item?')) {
     bucketItems = bucketItems.filter(i => i.id !== id);
@@ -136,7 +123,6 @@ function deleteItem(id) {
   }
 }
 
-// Edit title inline
 function editTitle(id, titleSpan) {
   const current = titleSpan.innerText;
   const input = document.createElement('input');
@@ -147,7 +133,7 @@ function editTitle(id, titleSpan) {
   titleSpan.parentNode.insertBefore(input, titleSpan);
   input.focus();
   
-  function saveEdit() {
+  function save() {
     if (input.value.trim()) {
       const item = bucketItems.find(i => i.id === id);
       if (item) item.title = input.value.trim();
@@ -157,53 +143,50 @@ function editTitle(id, titleSpan) {
     titleSpan.style.display = '';
   }
   
-  input.addEventListener('blur', saveEdit);
-  input.addEventListener('keypress', (e) => { if (e.key === 'Enter') saveEdit(); });
+  input.addEventListener('blur', save);
+  input.addEventListener('keypress', e => { if (e.key === 'Enter') save(); });
 }
 
-// Open edit popup for notes/image/date
 function openEditPopup(id, type) {
   const item = bucketItems.find(i => i.id === id);
   if (!item) return;
   
   if (type === 'notes') {
-    const newNotes = prompt('Edit notes:', item.notes || '');
-    if (newNotes !== null) item.notes = newNotes;
+    const val = prompt('Edit notes:', item.notes || '');
+    if (val !== null) item.notes = val;
   } else if (type === 'image') {
-    const newImage = prompt('Image path (e.g., images/photo.jpg):', item.image || '');
-    if (newImage !== null) item.image = newImage;
+    const val = prompt('Image path (images/photo.jpg):', item.image || '');
+    if (val !== null) item.image = val;
   } else if (type === 'date') {
-    const newDate = prompt('Completed date (YYYY-MM-DD):', item.completedDate || '');
-    if (newDate && item.completed) {
-      item.completedDate = newDate;
-    } else if (newDate && confirm('Mark this item as completed?')) {
+    const val = prompt('Completed date (YYYY-MM-DD):', item.completedDate || '');
+    if (val && item.completed) {
+      item.completedDate = val;
+    } else if (val && confirm('Mark as completed?')) {
       item.completed = true;
-      item.completedDate = newDate;
+      item.completedDate = val;
     }
   }
   saveData();
 }
 
-// Lightbox for images
 function openLightbox(src) {
-  const lightbox = document.createElement('div');
-  lightbox.style.position = 'fixed';
-  lightbox.style.top = '0';
-  lightbox.style.left = '0';
-  lightbox.style.width = '100%';
-  lightbox.style.height = '100%';
-  lightbox.style.background = 'rgba(0,0,0,0.9)';
-  lightbox.style.zIndex = '10000';
-  lightbox.style.display = 'flex';
-  lightbox.style.justifyContent = 'center';
-  lightbox.style.alignItems = 'center';
-  lightbox.style.cursor = 'pointer';
-  lightbox.innerHTML = `<img src="${src}" style="max-width:90%; max-height:90%; border:3px solid #c0c0c0;"><div style="position:absolute; top:20px; right:40px; color:white; font-size:30px; cursor:pointer; background:#c0c0c0; padding:5px 12px;">✗</div>`;
-  lightbox.addEventListener('click', () => lightbox.remove());
-  document.body.appendChild(lightbox);
+  const lb = document.createElement('div');
+  lb.style.position = 'fixed';
+  lb.style.top = '0';
+  lb.style.left = '0';
+  lb.style.width = '100%';
+  lb.style.height = '100%';
+  lb.style.background = 'rgba(0,0,0,0.9)';
+  lb.style.zIndex = '10000';
+  lb.style.display = 'flex';
+  lb.style.justifyContent = 'center';
+  lb.style.alignItems = 'center';
+  lb.style.cursor = 'pointer';
+  lb.innerHTML = `<img src="${src}" style="max-width:90%; max-height:90%; border:3px solid #c0c0c0;"><div style="position:absolute; top:20px; right:40px; background:#c0c0c0; padding:5px 12px; border:2px solid #fff; cursor:pointer;">✗</div>`;
+  lb.addEventListener('click', () => lb.remove());
+  document.body.appendChild(lb);
 }
 
-// Add new item
 function addItem() {
   document.getElementById('itemTitle').value = '';
   document.getElementById('itemNotes').value = '';
@@ -213,10 +196,7 @@ function addItem() {
 
 function saveNewItem() {
   const title = document.getElementById('itemTitle').value.trim();
-  if (!title) {
-    alert('Please enter a title!');
-    return;
-  }
+  if (!title) { alert('Enter a title!'); return; }
   bucketItems.push({
     id: Date.now(),
     title: title,
@@ -229,11 +209,10 @@ function saveNewItem() {
   document.getElementById('itemModal').style.display = 'none';
 }
 
-// Bulk add
 function bulkAdd() {
-  const items = prompt('Enter one item per line.\nUse | for notes (e.g., "Visit Japan | Cherry blossoms")');
-  if (!items) return;
-  const lines = items.split(/\r?\n/);
+  const input = prompt('Enter one item per line.\nUse | for notes: "Visit Japan | Cherry blossoms"');
+  if (!input) return;
+  const lines = input.split(/\r?\n/);
   let added = 0;
   lines.forEach(line => {
     line = line.trim();
@@ -244,37 +223,27 @@ function bulkAdd() {
       title = parts[0].trim();
       notes = parts.slice(1).join('|').trim();
     }
-    bucketItems.push({
-      id: Date.now() + added,
-      title: title,
-      completed: false,
-      notes: notes,
-      image: '',
-      completedDate: null
-    });
+    bucketItems.push({ id: Date.now() + added, title, completed: false, notes, image: '', completedDate: null });
     added++;
   });
-  if (added > 0) saveData();
+  if (added) saveData();
 }
 
-// Random suggestion
 function randomSuggestion() {
   const pending = bucketItems.filter(i => !i.completed);
-  const modalBody = document.getElementById('randomModalBody');
-  
-  if (pending.length === 0) {
-    modalBody.innerHTML = '<div style="text-align:center; padding:20px;">🎉 You\'ve completed everything! 🎉</div>';
+  const body = document.getElementById('randomModalBody');
+  if (!pending.length) {
+    body.innerHTML = '<div style="text-align:center; padding:20px;">🎉 You\'ve completed everything! 🎉</div>';
     document.getElementById('randomModal').style.display = 'flex';
     return;
   }
-  
-  const random = pending[Math.floor(Math.random() * pending.length)];
-  modalBody.innerHTML = `
+  const r = pending[Math.floor(Math.random() * pending.length)];
+  body.innerHTML = `
     <div style="text-align:center;">
       <div style="font-size:16px; margin-bottom:10px;">🎲 Try this:</div>
-      <div style="font-size:14px; margin-bottom:10px;"><strong>${escapeHtml(random.title)}</strong></div>
-      ${random.notes ? `<div style="font-size:11px; color:#555; margin-top:5px;">📝 ${escapeHtml(random.notes)}</div>` : ''}
-      <button id="closeRandomBtn" class="retro-button" style="margin-top:15px;">Close</button>
+      <div style="font-size:14px; margin-bottom:10px;"><strong>${escapeHtml(r.title)}</strong></div>
+      ${r.notes ? `<div style="font-size:11px; color:#555;">📝 ${escapeHtml(r.notes)}</div>` : ''}
+      <button id="closeRandomBtn" class="retro-btn" style="margin-top:15px;">Close</button>
     </div>
   `;
   document.getElementById('randomModal').style.display = 'flex';
@@ -283,7 +252,6 @@ function randomSuggestion() {
   });
 }
 
-// Export data
 function exportData() {
   const data = JSON.stringify(bucketItems, null, 2);
   const blob = new Blob([data], { type: 'application/json' });
@@ -295,137 +263,79 @@ function exportData() {
   URL.revokeObjectURL(url);
 }
 
-// Import data
 function importData() {
   const input = document.createElement('input');
   input.type = 'file';
   input.accept = '.json';
-  input.onchange = (e) => {
+  input.onchange = e => {
     const file = e.target.files[0];
     if (!file) return;
     const reader = new FileReader();
-    reader.onload = (ev) => {
+    reader.onload = ev => {
       try {
         const imported = JSON.parse(ev.target.result);
-        if (Array.isArray(imported) && confirm(`Import ${imported.length} items? This will replace your current list.`)) {
+        if (Array.isArray(imported) && confirm(`Import ${imported.length} items? Replace current list.`)) {
           bucketItems = imported;
           saveData();
         }
-      } catch(err) {
-        alert('Invalid file format');
-      }
+      } catch(err) { alert('Invalid file'); }
     };
     reader.readAsText(file);
   };
   input.click();
 }
 
-// Set filter
 function setFilter(filter) {
   currentFilter = filter;
   document.querySelectorAll('.filter-option').forEach(el => {
-    if (el.getAttribute('data-filter') === filter) {
-      el.classList.add('filter-active');
-    } else {
-      el.classList.remove('filter-active');
-    }
+    if (el.getAttribute('data-filter') === filter) el.classList.add('filter-active');
+    else el.classList.remove('filter-active');
   });
   render();
 }
 
-// How to use
 function howToUse() {
-  alert("📖 How to Use:\n\n• Click any title to edit it\n• Check the box to mark complete\n• Use File menu for Import/Export\n• View menu to filter items\n• Click images to enlarge");
+  alert("📖 How to Use:\n\n• Click any title to edit it\n• Check the box to mark complete\n• File menu: Import/Export\n• View menu: Filter items\n• Click images to enlarge");
 }
 
-// About
 function about() {
-  alert("📝 Bucket List Program\nVersion 2.0\n\nPart of your Windows 95-style personal hub.\nKeep dreaming, keep doing.");
+  alert("📝 Bucket List\nVersion 2.0\n\nWindows 95-style personal hub.\nKeep dreaming, keep doing.");
 }
 
-// Exit to desktop
 function exit() {
-  if (confirm('Close this window? You will return to the desktop.')) {
-    window.location.href = 'index.html';
-  }
+  if (confirm('Close this window?')) window.location.href = 'index.html';
 }
 
-// --- Drag window function ---
+// Drag window
 function makeDraggable() {
-  const windowEl = document.getElementById('mainWindow');
+  const win = document.getElementById('mainWindow');
   const header = document.getElementById('windowTitleBar');
-  if (!windowEl || !header) return;
-  
-  let pos1 = 0, pos2 = 0, pos3 = 0, pos4 = 0;
-  header.onmousedown = dragMouseDown;
-  
-  function dragMouseDown(e) {
-    e.preventDefault();
-    pos3 = e.clientX;
-    pos4 = e.clientY;
-    document.onmouseup = closeDrag;
-    document.onmousemove = elementDrag;
-  }
-  
-  function elementDrag(e) {
-    e.preventDefault();
-    pos1 = pos3 - e.clientX;
-    pos2 = pos4 - e.clientY;
-    pos3 = e.clientX;
-    pos4 = e.clientY;
-    windowEl.style.top = (windowEl.offsetTop - pos2) + "px";
-    windowEl.style.left = (windowEl.offsetLeft - pos1) + "px";
-    windowEl.style.position = 'absolute';
-  }
-  
-  function closeDrag() {
-    document.onmouseup = null;
-    document.onmousemove = null;
-  }
+  if (!win || !header) return;
+  let p1=0,p2=0,p3=0,p4=0;
+  header.onmousedown = dragDown;
+  function dragDown(e) { e.preventDefault(); p3 = e.clientX; p4 = e.clientY; document.onmouseup = closeDrag; document.onmousemove = drag; }
+  function drag(e) { e.preventDefault(); p1 = p3 - e.clientX; p2 = p4 - e.clientY; p3 = e.clientX; p4 = e.clientY; win.style.top = (win.offsetTop - p2) + "px"; win.style.left = (win.offsetLeft - p1) + "px"; win.style.position = 'absolute'; }
+  function closeDrag() { document.onmouseup = null; document.onmousemove = null; }
 }
 
-// --- Make modal draggable ---
 function makeModalDraggable(modalId, titleId) {
   const modal = document.getElementById(modalId);
   const header = document.getElementById(titleId);
   if (!modal || !header) return;
-  
-  let pos1 = 0, pos2 = 0, pos3 = 0, pos4 = 0;
-  header.onmousedown = dragMouseDown;
-  
-  function dragMouseDown(e) {
-    e.preventDefault();
-    pos3 = e.clientX;
-    pos4 = e.clientY;
-    document.onmouseup = closeDrag;
-    document.onmousemove = elementDrag;
-  }
-  
-  function elementDrag(e) {
-    e.preventDefault();
-    pos1 = pos3 - e.clientX;
-    pos2 = pos4 - e.clientY;
-    pos3 = e.clientX;
-    pos4 = e.clientY;
-    modal.style.top = (modal.offsetTop - pos2) + "px";
-    modal.style.left = (modal.offsetLeft - pos1) + "px";
-    modal.style.position = 'absolute';
-  }
-  
-  function closeDrag() {
-    document.onmouseup = null;
-    document.onmousemove = null;
-  }
+  let p1=0,p2=0,p3=0,p4=0;
+  header.onmousedown = dragDown;
+  function dragDown(e) { e.preventDefault(); p3 = e.clientX; p4 = e.clientY; document.onmouseup = closeDrag; document.onmousemove = drag; }
+  function drag(e) { e.preventDefault(); p1 = p3 - e.clientX; p2 = p4 - e.clientY; p3 = e.clientX; p4 = e.clientY; modal.style.top = (modal.offsetTop - p2) + "px"; modal.style.left = (modal.offsetLeft - p1) + "px"; modal.style.position = 'absolute'; }
+  function closeDrag() { document.onmouseup = null; document.onmousemove = null; }
 }
 
-// --- Initialize everything when page loads ---
+// Initialize
 window.addEventListener('DOMContentLoaded', () => {
   loadData();
   makeDraggable();
-  makeModalDraggable('itemModalContent', 'itemModalTitleBar');
+  makeModalDraggable('modalContent', 'modalTitleBar');
   makeModalDraggable('randomModalContent', 'randomModalTitleBar');
   
-  // Menu event listeners
   document.getElementById('addItemMenu').addEventListener('click', addItem);
   document.getElementById('bulkAddMenu').addEventListener('click', bulkAdd);
   document.getElementById('exportMenu').addEventListener('click', exportData);
@@ -444,18 +354,16 @@ window.addEventListener('DOMContentLoaded', () => {
   document.getElementById('minimizeBtn').addEventListener('click', exit);
   document.getElementById('closeBtn').addEventListener('click', exit);
   
-  // Filter options
   document.querySelectorAll('.filter-option').forEach(el => {
     el.addEventListener('click', () => setFilter(el.getAttribute('data-filter')));
   });
   
-  // Close modals when clicking outside
-  document.getElementById('itemModal').addEventListener('click', (e) => {
+  document.getElementById('itemModal').addEventListener('click', e => {
     if (e.target === document.getElementById('itemModal')) {
       document.getElementById('itemModal').style.display = 'none';
     }
   });
-  document.getElementById('randomModal').addEventListener('click', (e) => {
+  document.getElementById('randomModal').addEventListener('click', e => {
     if (e.target === document.getElementById('randomModal')) {
       document.getElementById('randomModal').style.display = 'none';
     }
