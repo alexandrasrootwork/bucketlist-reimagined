@@ -12,41 +12,41 @@
 <div class="window" id="mainWindow">
   <!-- Title Bar with Controls -->
   <div class="title-bar" id="windowTitleBar">
-    <span>📝 Bucket List</span>
+    <div class="title-text">📝 Bucket List</div>
     <div class="window-controls">
-      <span id="minimizeBtn">_</span>
-      <span id="closeBtn">✗</span>
+      <button class="win-btn" id="minimizeBtn">_</button>
+      <button class="win-btn" id="closeBtn">✗</button>
     </div>
   </div>
 
   <!-- Menu Bar -->
   <div class="menu-bar">
     <div class="dropdown">
-      <span class="menu-item">File ▼</span>
+      <button class="menu-btn">File ▼</button>
       <div class="dropdown-content">
-        <span class="menu-item" id="addItemMenu">➕ New Item</span>
-        <span class="menu-item" id="bulkAddMenu">📋 Bulk Add</span>
-        <span class="menu-item-divider"></span>
-        <span class="menu-item" id="exportMenu">💾 Export</span>
-        <span class="menu-item" id="importMenu">📂 Import</span>
-        <span class="menu-item-divider"></span>
-        <span class="menu-item" id="exitMenu">🚪 Exit</span>
+        <a href="#" id="addItemMenu">➕ New Item</a>
+        <a href="#" id="bulkAddMenu">📋 Bulk Add</a>
+        <div class="divider"></div>
+        <a href="#" id="exportMenu">💾 Export Backup</a>
+        <a href="#" id="importMenu">📂 Import Backup</a>
+        <div class="divider"></div>
+        <a href="#" id="exitMenu">🚪 Exit</a>
       </div>
     </div>
     <div class="dropdown">
-      <span class="menu-item">View ▼</span>
+      <button class="menu-btn">View ▼</button>
       <div class="dropdown-content">
-        <span class="menu-item filter-option" data-filter="all">📋 All (Pending)</span>
-        <span class="menu-item filter-option" data-filter="completed">✅ Completed</span>
+        <a href="#" class="filter-option" data-filter="all">📋 All (Pending)</a>
+        <a href="#" class="filter-option" data-filter="completed">✅ Completed</a>
       </div>
     </div>
     <div class="dropdown">
-      <span class="menu-item">Help ▼</span>
+      <button class="menu-btn">Help ▼</button>
       <div class="dropdown-content">
-        <span class="menu-item" id="randomMenu">🎲 Random Suggestion</span>
-        <span class="menu-item-divider"></span>
-        <span class="menu-item" id="howToMenu">📖 How to Use</span>
-        <span class="menu-item" id="aboutMenu">ℹ️ About</span>
+        <a href="#" id="randomMenu">🎲 Random Suggestion</a>
+        <div class="divider"></div>
+        <a href="#" id="howToMenu">📖 How to Use</a>
+        <a href="#" id="aboutMenu">ℹ️ About</a>
       </div>
     </div>
   </div>
@@ -54,45 +54,46 @@
   <!-- Main Content -->
   <div class="content" id="bucketContainer">
     <div class="info-box">
-      💡 Tip: Click any title to edit it. Check the box to mark complete. Use File menu to import/export.
+      💡 <strong>Tips:</strong> Click any title to edit it • Check the box to mark complete • Use File menu to import/export • Click images to enlarge
     </div>
+    <!-- Bucket items will appear here -->
   </div>
 
   <!-- Status Bar -->
   <div class="status-bar">
-    <span id="itemCount">0 items</span>
+    <div id="itemCount">0 items</div>
     <div class="status-right">
       <span>Progress:</span>
-      <div class="progress-bar-bg">
-        <div class="progress-bar-fill" id="progressFill"></div>
+      <div class="progress-bar">
+        <div class="progress-fill" id="progressFill"></div>
       </div>
       <span id="progressPercent">0%</span>
     </div>
   </div>
 </div>
 
-<!-- Add Item Modal -->
+<!-- Add/Edit Modal -->
 <div class="modal" id="itemModal">
-  <div class="modal-content" id="itemModalContent">
-    <div class="modal-title-bar" id="itemModalTitleBar">
+  <div class="modal-content">
+    <div class="modal-title-bar" id="modalTitleBar">
       <span>Add New Item</span>
-      <span class="modal-close" id="closeItemModal">✗</span>
+      <button class="modal-close" id="closeItemModal">✗</button>
     </div>
     <div class="modal-body">
-      <input type="text" id="itemTitle" placeholder="What do you want to do?">
+      <input type="text" id="itemTitle" placeholder="What do you want to do?" autocomplete="off">
       <textarea id="itemNotes" placeholder="Notes (optional)" rows="3"></textarea>
-      <input type="text" id="itemImage" placeholder="Image path (e.g., images/photo.jpg)">
-      <button id="saveItemBtn" class="retro-button">Save</button>
+      <input type="text" id="itemImage" placeholder="Image path (images/photo.jpg)">
+      <button id="saveItemBtn" class="retro-btn">Save</button>
     </div>
   </div>
 </div>
 
-<!-- Random Modal -->
+<!-- Random Suggestion Modal -->
 <div class="modal" id="randomModal">
-  <div class="modal-content" id="randomModalContent">
+  <div class="modal-content">
     <div class="modal-title-bar" id="randomModalTitleBar">
       <span>🎲 Random Suggestion</span>
-      <span class="modal-close" id="closeRandomModal">✗</span>
+      <button class="modal-close" id="closeRandomModal">✗</button>
     </div>
     <div class="modal-body" id="randomModalBody"></div>
   </div>
